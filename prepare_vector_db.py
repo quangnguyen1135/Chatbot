@@ -41,16 +41,16 @@ def extract_google_drive_links_from_docx_file(docx_file_path):
 
 def create_db_from_files():
     # Load documents from directory using DirectoryLoader
-    loader = DirectoryLoader(DATA_PATH, glob="*.docx", loader_cls=Docx2txtLoader)
-    document_files = loader.load()  # If this returns a list of file paths
+    docx_loader = DirectoryLoader(DATA_PATH, glob="*.docx", loader_cls=Docx2txtLoader)
+    docx_files = docx_loader.load()
     
-    print("Document files:", document_files)  # Debugging output
+    print("Document files:", docx_files)  # Debugging output
 
     # Initialize list to store Google Drive links
     google_drive_links = []
     
     # Loop through the document paths and extract Google Drive links
-    for docx_path in document_files:
+    for docx_path in docx_files:
         # Check if 'docx_path' is actually a string path before using it
         if isinstance(docx_path, str):
             google_drive_links.extend(extract_google_drive_links_from_docx_file(docx_path))
@@ -81,13 +81,13 @@ def create_db_from_files():
     
     # Split PDF documents into chunks
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=512, chunk_overlap=200)
-    pdf_chunks = text_splitter.split_documents(document_files)
+    docx_chunks = text_splitter.split_documents(docx_files)
     
     # Load embedding model
     embedding_model = GPT4AllEmbeddings(model_file=MODEL_PATH)
     
     # Create FAISS Vector DB
-    db = FAISS.from_documents(pdf_chunks, embedding_model)
+    db = FAISS.from_documents(docx_chunks, embedding_model)
     db.save_local(VECTOR_DB_PATH)
     
     
@@ -95,8 +95,8 @@ def create_db_from_files():
 
 def create_db_from_files_PDF():
     # Load documents from directory using DirectoryLoader
-    loader = DirectoryLoader(DATA_PATH, glob="*.pdf", loader_cls=PyPDFLoader)
-    pdf_files = loader.load()  # If this returns a list of file paths
+    pdf_loader = DirectoryLoader(DATA_PATH, glob="*.pdf", loader_cls=PyPDFLoader)
+    pdf_files = pdf_loader.load()
     
     print("Document files:", pdf_files)  # Debugging output
 

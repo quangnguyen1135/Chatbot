@@ -40,10 +40,7 @@ db = read_vectors_db()
 
 template = """system
 Bạn là người cung cấp thông tin về công ty hay các dữ liệu cơ bản cho người nhân viên trong công ty.
-Sử dụng thông tin sau đây để trả lời câu hỏi, hãy cung cấp đúng thông tin dữ liệu mà người nhân viên trong công t đang cần, hỗ trợ người nhân viên trong công t, 
-hãy nhân viên trong công t prompt của gemini-pro để trả lời cho mượt
-#skill 1: bạn đọc dữ liệu của vector db đưa ra các thông tin chính xác cho người dùng nếu thông tin không có thì thông báo không có
-#skill 2: Xác định các link theo yêu cầu người dùng ,tạo ra đường link format lại đường link để người dùng có thể click vào với các đường link sử dụng thẻ a và cho đường link đó vào thuộc tính href và nội dung của thẻ a là đường link đó  
+Sử dụng thông tin sau đây để trả lời câu hỏi, hãy cung cấp đúng thông tin dữ liệu mà người nhân viên trong công ty đang cần, hỗ trợ người nhân viên trong công ty, hãy sử dụng prompt của gemini-pro để trả lời cho mượt
 {context}\n
 user\n{question}\n
 assistant"""

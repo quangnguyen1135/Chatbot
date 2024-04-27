@@ -64,12 +64,14 @@
             margin: 5px;
             word-wrap: break-word;
             max-width: 70%;
+            display: inline-block;
         }
 
         .user-message {
+            text-align: right;
             background-color: #3b82f6;
             color: #ffffff;
-            align-self: flex-end;
+            align-self: flex-end !important;
         }
 
         .bot-message {
@@ -87,7 +89,7 @@
                 color: #ffffff;
                 border-radius: 10px;
                 padding: 10px;
-                margin-left: auto;
+                margin-right: auto;
             }
             
             .bot-message {
@@ -105,7 +107,7 @@
     <div class="chat-container">
         <div id="chat-history" class="message-container"></div>
         <div class="input-container flex-center">
-            <input type="text" id="chat" class="input-field" placeholder="Nhập câu hỏi của bạn">
+            <input type="text" id="chat" class="input-field" placeholder="Nhập câu hỏi của bạn" autofocus>
             <button id="btn" class="send-button">Gửi</button>
         </div>
     </div>
@@ -131,6 +133,7 @@
         function sendMessage() {
             const userMessage = userInput.value.trim();
             if (userMessage) {
+                userInput.value = ''; // Làm mới ô input field
                 addChatMessage('user', userMessage);
                 fetch('/bot_response', {
                     method: 'POST',
@@ -143,7 +146,6 @@
                 .then(data => {
                     if (data.response) {
                         addChatMessage('bot', data.response);
-                        userInput.value = '';
                     } else {
                         console.error('Error:', data.error);
                     }
@@ -151,6 +153,8 @@
                 .catch(error => console.error('Error:', error));
             }
         }
+        
+        
 
         sendButton.addEventListener('click', sendMessage);
 
