@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+    <style>
+        /* Your custom CSS styles here */
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 100vh;  
+            padding: 20px;
+        }
+
+        #chat-history {
+            flex: 1;
+            overflow-y: auto;
+            max-height: 80vh;
+            border: 1px solid #e5e7eb;
+            border-radius: 5px;
+            padding: 10px;
+        }
+
+        .input-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .input-field {
+            flex: 1;
+            border: 1px solid #e5e7eb;
+            border-radius: 5px;
+            padding: 10px;
+            margin-right: 10px;
+        }
+
+        .send-button {
+            background-color: #3b82f6;
+            color: #ffffff;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+        }
+
+        .flex-center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .message-container {
+            max-width: 100%;
+        }
+
+        .message {
+            border-radius: 10px;
+            padding: 10px;
+            margin: 5px;
+            word-wrap: break-word;
+            max-width: 70%;
+        }
+
+        .user-message {
+            background-color: #3b82f6;
+            color: #ffffff;
+            align-self: flex-end;
+        }
+
+        .bot-message {
+            background-color: #10b981;
+            color: #ffffff;
+            align-self: flex-start;
+            .message-container {
+                display: inline-block;
+                max-width: 70%;
+                margin-bottom: 10px;
+            }
+            
+            .user-message {
+                background-color: #3b82f6;
+                color: #ffffff;
+                border-radius: 10px;
+                padding: 10px;
+                margin-left: auto;
+            }
+            
+            .bot-message {
+                background-color: #10b981;
+                color: #ffffff;
+                border-radius: 10px;
+                padding: 10px;
+                margin-right: auto;
+            }
+            
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div id="chat-history" class="message-container"></div>
+        <div class="input-container flex-center">
+            <input type="text" id="chat" class="input-field" placeholder="Nhập câu hỏi của bạn">
+            <button id="btn" class="send-button">Gửi</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
+    <script type="module">
+        const chatHistory = document.getElementById('chat-history');
+        const userInput = document.getElementById('chat');
+        const sendButton = document.getElementById('btn');
+
+        function addChatMessage(sender, message) {
+            const messageContainer = document.createElement('div');
+            const messageElement = document.createElement('div');
+            messageContainer.classList.add('message-container');
+            messageElement.classList.add('message', sender === 'user' ? 'user-message' : 'bot-message');
+            messageElement.textContent = message;
+            messageContainer.appendChild(messageElement);
+            chatHistory.appendChild(messageContainer);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        }
+        
+
+        function sendMessage() {
+            const userMessage = userInput.value.trim();
+            if (userMessage) {
+                addChatMessage('user', userMessage);
+                fetch('/bot_response', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ question: userMessage })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.response) {
+                        addChatMessage('bot', data.response);
+                        userInput.value = '';
+                    } else {
+                        console.error('Error:', data.error);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+
+        userInput.addEventListener('keypress', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>

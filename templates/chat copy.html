@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <style>
+        body {
+            font-family: sans-serif;
+            margin: 0;
+            padding: 20px;
+        }
+
+        .chat-container {
+            display: flex;
+            flex-direction: column;
+            width: 80%;
+            margin: 0 auto;
+            border: 1px solid #ccc;
+            padding: 20px;
+        }
+
+        .chat-message {
+            margin-bottom: 10px;
+        }
+
+        .user-message {
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .bot-message {
+            background-color: #e0e0e0;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .input-container {
+            display: flex;
+            margin-top: 20px;
+        }
+
+        .input-field {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+
+        .send-button {
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="chat-container">
+        <div id="chat-history"></div>
+
+        <div class="input-container">
+            <input type="text" id="user-input" class="input-field" placeholder="Nhập câu hỏi của bạn">
+            <button id="send-button" class="send-button">Gửi</button>
+        </div>
+    </div>
+
+    <script>
+        const chatHistory = document.getElementById('chat-history');
+        const userInput = document.getElementById('user-input');
+        const sendButton = document.getElementById('send-button');
+
+        // Function to add chat messages to the chat history
+        function addChatMessage(sender, message) {
+            const chatMessage = document.createElement('div');
+            chatMessage.classList.add('chat-message');
+
+            const messageElement = document.createElement(sender === 'user' ? 'div' : 'span');
+            messageElement.classList.add(sender === 'user' ? 'user-message' : 'bot-message');
+            messageElement.textContent = message;
+
+            chatMessage.appendChild(messageElement);
+            chatHistory.appendChild(chatMessage);
+            chatHistory.scrollTop = chatHistory.scrollHeight; // Scroll to the bottom of chat history
+        }
+
+        function sendMessage() {
+            const userMessage = userInput.value.trim();
+            if (userMessage) {
+                addChatMessage('user', userMessage);
+                
+                fetch('/bot_response', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ question: userMessage })
+                })
+                
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.response) {
+                            addChatMessage('bot', data.response);
+                            userInput.value = ''; // Clear the input field
+                        } else {
+                            console.error('Error:', data.error);
+                        }
+                    })
+                    .catch(error => console.error('Error:', error));
+            }
+        }
+
+        // Event listener to handle "Enter" key press on input field
+        userInput.addEventListener('keypress', function (event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Prevent form submission
+                sendMessage(); // Call the function to send the message
+            }
+        });
+
+        // Event listener to handle button click
+        sendButton.addEventListener('click', sendMessage);
+    </script>
+</body>
+
+</html>
