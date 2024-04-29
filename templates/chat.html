@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chatbot</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tailwindcss/2.2.19/tailwind.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/markdown-it/12.0.6/markdown-it.min.js"></script>
     <style>
         /* Your custom CSS styles here */
         .chat-container {
@@ -78,42 +79,69 @@
             background-color: #10b981;
             color: #ffffff;
             align-self: flex-start;
-            .message-container {
-                display: inline-block;
-                max-width: 70%;
-                margin-bottom: 10px;
-            }
-            
-            .user-message {
-                background-color: #3b82f6;
-                color: #ffffff;
-                border-radius: 10px;
-                padding: 10px;
-                margin-right: auto;
-            }
-            
-            .bot-message {
-                background-color: #10b981;
-                color: #ffffff;
-                border-radius: 10px;
-                padding: 10px;
-                margin-right: auto;
-            }
-            
         }
+
+        /* Thêm animation cho các cục tròn */
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0);
+            }
+            50% {
+                transform: translateY(-5px);
+            }
+        }
+        
+        .typing-indicator-dot {
+            width: 10px;
+            height: 10px;
+            background-color: #555;
+            border-radius: 50%;
+            animation: bounce 0.5s infinite alternate; /* Sử dụng animation để tạo hiệu ứng nhảy nhảy */
+        }
+        
+        /* Đảm bảo các cục tròn hiển thị trong một dòng */
+        .typing-indicator-dot:last-child {
+            margin-right: 0;
+        }
+        
+        /* Thiết lập animation delay cho từng cục tròn */
+        .typing-indicator-dot:nth-child(1) {
+            animation-delay: 0.1s;
+        }
+        
+        .typing-indicator-dot:nth-child(2) {
+            animation-delay: 0.25s;
+        }
+        
+        .typing-indicator-dot:nth-child(3) {
+            animation-delay: 0.35s;
+        }
+        
+
+            
     </style>
 </head>
 <body>
     <div class="chat-container">
         <div id="chat-history" class="message-container"></div>
+        <!-- Thay đổi cục tròn hiển thị hiệu ứng -->
+        <div id="typing-indicator" class="flex items-center space-x-1 hidden">
+            <div class="typing-indicator-dot"></div>
+            <div class="typing-indicator-dot"></div>
+            <div class="typing-indicator-dot"></div>
+        </div>
+
         <div class="input-container flex-center">
             <input type="text" id="chat" class="input-field" placeholder="Nhập câu hỏi của bạn" autofocus>
             <button id="btn" class="send-button">Gửi</button>
         </div>
     </div>
+    <script src="https://cdn.jsdelivr.net/npm/linkify-it@2.0.0/dist/linkify-it.browser.js"></script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/showdown/2.1.0/showdown.min.js"></script>
     <script type="module">
+        const md = window.markdownit();
+
         const chatHistory = document.getElementById('chat-history');
         const userInput = document.getElementById('chat');
         const sendButton = document.getElementById('btn');
@@ -123,18 +151,49 @@
             const messageElement = document.createElement('div');
             messageContainer.classList.add('message-container');
             messageElement.classList.add('message', sender === 'user' ? 'user-message' : 'bot-message');
-            messageElement.textContent = message;
+        
+            // Format the bot's response
+            let formattedMessage = message;
+            if (sender === 'bot') {
+                // Apply formatting based on certain criteria
+                if (formattedMessage.startsWith('# ')) {
+                    // Heading
+                    formattedMessage = `<h1>${formattedMessage.substring(2)}</h1>`;
+                } else if (formattedMessage.match(/^\*\s/) || formattedMessage.match(/^-\s/)) {
+                    // Bullet points
+                    formattedMessage = `<ul><li>${formattedMessage.substring(2)}</li></ul>`;
+                }
+                // Add more formatting rules as needed
+            }
+        
+            // Convert URLs in the message to clickable links
+            const messageWithLinks = formattedMessage.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+        
+            // Set the raw message with links as HTML content
+            messageElement.innerHTML = messageWithLinks;
+        
             messageContainer.appendChild(messageElement);
             chatHistory.appendChild(messageContainer);
             chatHistory.scrollTop = chatHistory.scrollHeight;
         }
         
-
+        
+        function showTypingIndicator() {
+            const typingIndicator = document.getElementById('typing-indicator');
+            typingIndicator.classList.remove('hidden');
+        }
+        
+        function hideTypingIndicator() {
+            const typingIndicator = document.getElementById('typing-indicator');
+            typingIndicator.classList.add('hidden');
+        }
+        
         function sendMessage() {
             const userMessage = userInput.value.trim();
             if (userMessage) {
-                userInput.value = ''; // Làm mới ô input field
+                userInput.value = ''; // Clear input field
                 addChatMessage('user', userMessage);
+                showTypingIndicator(); // Hiển thị hiệu ứng "ô bóng 3 chấm"
                 fetch('/bot_response', {
                     method: 'POST',
                     headers: {
@@ -150,10 +209,12 @@
                         console.error('Error:', data.error);
                     }
                 })
-                .catch(error => console.error('Error:', error));
+                .catch(error => console.error('Error:', error))
+                .finally(() => {
+                    hideTypingIndicator(); // Ẩn hiệu ứng "ô bóng 3 chấm" sau khi bot hoàn thành phản hồi
+                });
             }
         }
-        
         
 
         sendButton.addEventListener('click', sendMessage);

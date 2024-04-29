@@ -1,19 +1,19 @@
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain_community.document_loaders import DirectoryLoader, Docx2txtLoader, PyPDFLoader
+import os
+import re
+from langchain_community.document_loaders import DirectoryLoader, PyPDFLoader
 from langchain_community.vectorstores import FAISS
 from langchain_community.embeddings import GPT4AllEmbeddings
-from langchain_google_genai import GoogleGenerativeAI , GoogleGenerativeAIEmbeddings
-from docx import Document
-import requests
+from langchain.text_splitter import RecursiveCharacterTextSplitter
 from io import BytesIO
-import re
-import os
+import requests
+from PyPDF2 import PdfFileReader
 
 # Constants
 DATA_PATH = "data"
 VECTOR_DB_PATH = "vectorstores/db_faiss"
 MODEL_PATH = "./models/all-MiniLM-L6-v2-f16.gguf"
 # Extract Google Drive links from the first DOCX file found
+
 
 
 def extract_google_drive_links_from_docx_file(docx_file_path):
@@ -93,6 +93,7 @@ def create_db_from_files():
     
     return db
 
+
 def create_db_from_files_PDF():
     # Load documents from directory using DirectoryLoader
     pdf_loader = DirectoryLoader(DATA_PATH, glob="*.pdf", loader_cls=PyPDFLoader)
@@ -100,7 +101,6 @@ def create_db_from_files_PDF():
     
     print("Document files:", pdf_files)  # Debugging output
 
-    
     # Split PDF documents into chunks
     text_splitter = RecursiveCharacterTextSplitter(chunk_size=512, chunk_overlap=200)
     pdf_chunks = text_splitter.split_documents(pdf_files)
@@ -111,11 +111,9 @@ def create_db_from_files_PDF():
     # Create FAISS Vector DB
     db = FAISS.from_documents(pdf_chunks, embedding_model)
     db.save_local(VECTOR_DB_PATH)
-    
-    
     return db
 
 
 # Usage
-db_from_files = create_db_from_files()
+# db_from_files = create_db_from_files()
 create_db_from_files_PDF()
